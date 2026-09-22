@@ -1,6 +1,26 @@
 const { safeClick, safeType, safeFill, ready, waitClosed } = require('./utils');
 const data = require('../data/data.json');
 
+// Some search-result matches can include hidden/off-screen elements before
+// the real visible one, so .first() alone isn't safe. This checks every
+// match in turn and clicks whichever one is actually visible.
+async function clickVisibleTextMatch(page, regex, timeout = 15000) {
+  const locator = page.getByText(regex);
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const count = await locator.count();
+    for (let i = 0; i < count; i++) {
+      const el = locator.nth(i);
+      if (await el.isVisible().catch(() => false)) {
+        await el.click();
+        return;
+      }
+    }
+    await page.waitForTimeout(300);
+  }
+  throw new Error(`No visible element matched ${regex} within ${timeout}ms`);
+}
+
 class skeletonPage {
   constructor(page) {
     this.page = page;
@@ -55,9 +75,7 @@ class skeletonPage {
     // after Search fires (this was the cause of the "stopped after adidas" stall).
     await safeClick(this.page, this.page.locator("//i[@title='Add Link']"));
     await this.searchAndType(data.subBrand);
-    const subBrandResult = this.page.getByText(new RegExp(data.subBrand, 'i')).first();
-    await subBrandResult.waitFor({ state: 'visible', timeout: 15000 });
-    await subBrandResult.click();
+    await clickVisibleTextMatch(this.page, new RegExp(data.subBrand, 'i'));
     await this.confirmOk();
 
     // Supplier Site
@@ -67,7 +85,11 @@ class skeletonPage {
 
     // Future date
     const dateField = await ready(this.page.getByPlaceholder('M/d/yyyy'));
+    await dateField.click();
     await dateField.fill(this.getFutureDate(data.futureDateDays));
+    // close the calendar popup that opens on focus, so it doesn't sit on
+    // top of the Save button and intercept the next click
+    await this.page.keyboard.press('Escape');
 
     // Save
     await safeClick(this.page, "//span[normalize-space()='Save']");

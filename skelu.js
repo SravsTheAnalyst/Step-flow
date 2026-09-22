@@ -1,7 +1,7 @@
-import { safeClick, safeType, safeFill, ready, waitClosed } from './utils';
-import data from '../data/data.json';
+const { safeClick, safeType, safeFill, ready, waitClosed } = require('./utils');
+const data = require('../data/data.json');
 
-export class skeletonPage {
+class skeletonPage {
   constructor(page) {
     this.page = page;
   }
@@ -9,12 +9,17 @@ export class skeletonPage {
   async stepApplicationAsAdmin() {
     await this.page.goto(data.url);
     await this.page.locator('#username').fill(data.username);
-    await this.page.locator('#password').fill(data.password);
-    await safeClick(this.page, "#signOnButton");
+    await this.page.fill("input[id='password']", data.password);
+    await safeClick(this.page, '//*[@id="signOnButton"]');
   }
 
   async portalJLUserWebUI() {
-    await safeClick(this.page, "#JLUserPortal-link span");
+    await safeClick(this.page, '//*[@id="JLUserPortal-link"]/span');
+  }
+
+  async createBasicItem() {
+    await safeClick(this.page, "div[class='inner-panel double-width with-threeTaskModes'] button[type='button'] div span[class='text']");
+    await safeClick(this.page, "//*[normalize-space()='Create Basic Item']");
   }
 
   async searchAndType(value) {
@@ -27,11 +32,6 @@ export class skeletonPage {
     const ok = this.page.locator("//*[text() = 'OK']");
     await safeClick(this.page, ok);
     await waitClosed(ok);
-  }
-
-  async createBasicItem() {
-    await safeClick(this.page, "div[class='inner-panel double-width with-threeTaskModes'] button[type='button'] div span[class='text']");
-    await safeClick(this.page, "//*[normalize-space()='Create Basic Item']");
   }
 
   async provideSkeletonData() {
@@ -50,11 +50,13 @@ export class skeletonPage {
     await safeFill(this.page.locator("//textarea[@class='gwt-TextArea stibo-Value validator-text stibo-Value-Text mandatory']"), data.productDesc);
     await safeFill(this.page.locator("//*[@class='gwt-TextBox stibo-Value validator-text stibo-Value-Text mandatory' and @maxlength='21']"), data.vpn);
 
-    // Sub Brand — scoped to the Sub Brand field; adjust container id/class if different on the real page
-    await safeClick(this.page, this.page.locator("div[id='Sub_Brand'] i[title='Add Link']"));
+    // Sub Brand — FIX applied here: waits for the actual search result to
+    // render before clicking it, instead of clicking .nth(0) immediately
+    // after Search fires (this was the cause of the "stopped after adidas" stall).
+    await safeClick(this.page, this.page.locator("//i[@title='Add Link']"));
     await this.searchAndType(data.subBrand);
     const subBrandResult = this.page.getByText(new RegExp(data.subBrand, 'i')).first();
-    await subBrandResult.waitFor({ state: 'visible' });
+    await subBrandResult.waitFor({ state: 'visible', timeout: 15000 });
     await subBrandResult.click();
     await this.confirmOk();
 
@@ -78,17 +80,4 @@ export class skeletonPage {
   }
 }
 
-import { test } from '@playwright/test';
-import { skeletonPage } from '../pages/skeleton';
-
-test('TC_02_BasicItem_Skeleton_Creation', async ({ page }) => {
-
-    const skeleton = new skeletonPage(page);
-
-    await skeleton.stepApplicationAsAdmin();
-    await skeleton.portalJLUserWebUI();
-    await skeleton.createBasicItem();
-    await skeleton.provideSkeletonData();
-
-    console.log("\n TC_02_BasicItem_Skeleton_Creation *** PASSED ***");
-})
+module.exports = { skeletonPage };

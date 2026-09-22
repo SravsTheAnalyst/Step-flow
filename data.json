@@ -1,0 +1,24 @@
+{
+  "url": "https://jlp-test-step.mdm.stibosystems.com/#",
+  "username": "J84620973a",
+  "password": "January12345",
+
+  "productType": "Men's shirt",
+  "categoryNumber": "3603",
+  "shortDesc": "Polo Men's Shirt",
+  "productDesc": "Polo Men's Shirt",
+  "vpn": "245683",
+  "subBrand": "adidas",
+  "supplierSite": "76666",
+  "futureDateDays": 14,
+
+  "initialStyleCode": "360301",
+  "retailPrice": "9999.00",
+  "distributor": "John Lewis",
+  "imageSource": "Publication",
+  "unitCost": "800",
+  "packSize": "1",
+  "washingInstructionsIndex": 7,
+
+  "excelFileName": "item-log.xlsx"
+}

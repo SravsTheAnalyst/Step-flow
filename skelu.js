@@ -77,3 +77,18 @@ export class skeletonPage {
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
   }
 }
+
+import { test } from '@playwright/test';
+import { skeletonPage } from '../pages/skeleton';
+
+test('TC_02_BasicItem_Skeleton_Creation', async ({ page }) => {
+
+    const skeleton = new skeletonPage(page);
+
+    await skeleton.stepApplicationAsAdmin();
+    await skeleton.portalJLUserWebUI();
+    await skeleton.createBasicItem();
+    await skeleton.provideSkeletonData();
+
+    console.log("\n TC_02_BasicItem_Skeleton_Creation *** PASSED ***");
+})

@@ -27,9 +27,6 @@ class skeletonPage {
     const textBox = this.page.locator("//*[@class='gwt-SuggestBox']");
     await safeClick(this.page, textBox);
     await safeType(textBox, value);
-    // dismiss the autocomplete suggestion dropdown that pops up while
-    // typing, so it doesn't overlap or interfere with the next click
-    await this.page.keyboard.press('Escape');
     await safeClick(this.page, "//*[@class='stibo-GraphicsButton material SearchButton']");
   }
 
@@ -59,7 +56,14 @@ class skeletonPage {
     // render before clicking it, instead of clicking .nth(0) immediately
     // after Search fires (this was the cause of the "stopped after adidas" stall).
     await safeClick(this.page, this.page.locator("//i[@title='Add Link']"));
-    await this.searchAndType(data.subBrand);
+    await safeClick(this.page, "//div[text()='Search']");
+    const subBrandBox = this.page.locator("//*[@class='gwt-SuggestBox']");
+    await safeClick(this.page, subBrandBox);
+    await safeType(subBrandBox, data.subBrand);
+    // dismiss the autocomplete suggestion dropdown that pops up while
+    // typing here specifically, before it clicks Search
+    await this.page.keyboard.press('Escape');
+    await safeClick(this.page, "//*[@class='stibo-GraphicsButton material SearchButton']");
     const exactResult = this.page.getByText(data.subBrand, { exact: true }).first();
     await exactResult.waitFor({ state: 'visible', timeout: 15000 });
     await exactResult.click();
